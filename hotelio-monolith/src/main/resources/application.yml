@@ -10,7 +10,15 @@ spring:
     properties:
       hibernate.format_sql: false
 
-#booking:
-#  service:
-#    external-host: booking-service
-#    external-port: 9090
+booking:
+  service:
+    external-host: booking-service
+    external-port: 9090
+
+grpc:
+  client:
+    booking-service:
+      address: ${BOOKING_SERVICE_EXTERNAL_HOST:booking-service}:${BOOKING_SERVICE_EXTERNAL_PORT:9090}
+      negotiation-type: plaintext
+      enable-keep-alive: true
+

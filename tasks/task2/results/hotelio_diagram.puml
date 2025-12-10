@@ -1,0 +1,69 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+System_Boundary(hotelio, "Hotelio Monolith") {
+
+  Container(monolith, "Monolith Application", "Spring Boot", "Legacy app exposing REST endpoints for hotel booking") {
+
+    ' Controllers
+    Component(hotelController, "HotelController", "Spring MVC", "/api/hotels")
+    Component(promoController, "PromoCodeController", "Spring MVC", "/api/promos")
+    Component(reviewController, "ReviewController", "Spring MVC", "/api/reviews")
+    Component(userController, "UserController", "Spring MVC", "/api/users")
+    Component(bookingController, "BookingController", "Spring MVC", "/api/bookings")
+
+    ' Services
+    Component(hotelService, "HotelService", "Java Service", "Retrieves hotel details")
+    Component(userService, "UserService", "Java Service", "Validates user status and blacklist")
+    Component(promoService, "PromoCodeService", "Java Service", "Applies discounts and rules")
+    Component(reviewService, "ReviewService", "Java Service", "Manages hotel reviews")
+
+    ' DB
+    ComponentDb(postgres, "Monolith DB", "PostgreSQL", "Stores users, hotels, bookings, reviews, promos")
+
+    ' Controller-Service relations
+    Rel(hotelController, hotelService, "Uses")
+    Rel(promoController, promoService, "Uses")
+    Rel(reviewController, reviewService, "Uses")
+    Rel(userController, userService, "Uses")
+
+    ' Service-Service and Service-DB
+    Rel(userService, postgres, "Reads")
+    Rel(hotelService, postgres, "Reads")
+    Rel(promoService, postgres, "Reads")
+    Rel(reviewService, postgres, "Reads/Writes")
+  }
+}
+
+Component(kafka, "Kafka message broker", "Async communication between services")
+
+System_Boundary(booking, "Booking service") {
+    
+    Component(bookingService, "BookingService", "Java Service", "Validates and creates bookings")
+    Component(grpc, "gRPC Server", "Accepts requests from Booking Controller")
+    ComponentDb(postgres_booking, "Booking service DB", "PostgreSQL", "Stores bookings")
+
+    Rel(bookingController, grpc, "Calls")
+    Rel(grpc, bookingService, "Calls")
+    Rel(bookingService, postgres_booking, "Reads/Writes")
+    Rel(bookingService, kafka, "Send message about booking")
+}
+
+System_Boundary(booking_history, "Booking history service") {
+    
+    Component(bookingHistoryService, "BookingHistoryService", "Java Service", "Stores booking data")
+    ComponentDb(postgres_history_booking, "Booking history service DB", "PostgreSQL", "Stores bookings history")
+
+    Rel(kafka, bookingHistoryService, "Listen events")
+    Rel(bookingHistoryService, postgres_history_booking, "Reads/Writes")
+}
+
+Person(user, "User", "Interacts with frontend")
+Rel(user, bookingController, "Calls")
+Rel(user, hotelController, "Uses")
+Rel(user, promoController, "Uses")
+Rel(user, reviewController, "Uses")
+Rel(user, userController, "Uses")
+@enduml

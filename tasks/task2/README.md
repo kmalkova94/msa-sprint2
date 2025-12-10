@@ -17,7 +17,7 @@ docker compose up -d --build
 ```
 ➡️  BookingService beans:
     - bookingService: class com.hotelio.monolith.service.BookingService
-    - grpcBookingService: class com.hotelio.GrpcBookingService
+    - dockgrpcBookingService: class com.hotelio.GrpcBookingService
 ```
 
 При запуске тестов, тесты на booking должны упасть.

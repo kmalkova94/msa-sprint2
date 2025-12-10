@@ -1,0 +1,26 @@
+$ docker run --rm --network hotelio-net -e DB_HOST=monolith-db -e DB_PORT=5432 -e DB_NAME=hotelio -e DB_USER=hotelio -e DB_PASSWORD=hotelio -e API_URL=http://monolith:8084 hotelio-tester
+🏁 Регрессионный тест до миграции Hotelio
+🧪 Проверка подключения к БД...
+🧪 Загрузка фикстур...
+DELETE 0
+DELETE 0
+DELETE 0
+DELETE 0
+DELETE 0
+INSERT 0 4
+INSERT 0 3
+INSERT 0 12
+INSERT 0 3
+INSERT 0 2
+🧪 Выполнение HTTP-тестов...
+
+Тесты пользователей...
+curl: (7) Failed to connect to monolith port 8084: Connection refused
+❌ Пользователь test-user-1 не найден
+
+
+$ curl http://localhost:8084/api/bookings
+[{"id":1,"userId":"test-user-2","hotelId":"test-hotel-1","promoCode":"TESTCODE1"
+,"discountPercent":10.0,"price":90.0,"createdAt":"2025-11-21T21:12:24.989005Z"},
+{"id":2,"userId":"test-user-3","hotelId":"test-hotel-1","promoCode":null,"discou
+ntPercent":0.0,"price":80.0,"createdAt":"2025-11-21T21:12:24.989005Z"}]

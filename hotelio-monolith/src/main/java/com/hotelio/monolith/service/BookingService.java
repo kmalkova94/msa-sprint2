@@ -3,10 +3,14 @@ package com.hotelio.monolith.service;
 import com.hotelio.monolith.entity.Booking;
 import com.hotelio.monolith.entity.PromoCode;
 import com.hotelio.monolith.repository.BookingRepository;
+import com.hotelio.proto.booking.BookingRequest;
+import com.hotelio.proto.booking.BookingResponse;
+import com.hotelio.proto.booking.BookingServiceGrpc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,7 +18,6 @@ import java.util.Optional;
 public class BookingService {
 
     private static final Logger log = LoggerFactory.getLogger(BookingService.class);
-
     private final BookingRepository bookingRepository;
     private final PromoCodeService promoCodeService;
     private final ReviewService reviewService;
@@ -40,7 +43,7 @@ public class BookingService {
     }
 
     public Booking createBooking(String userId, String hotelId, String promoCode) {
-        log.info("Creating booking: userId={}, hotelId={}, promoCode={}", userId, hotelId, promoCode);
+        log.info("Creating booking in monolith: userId={}, hotelId={}, promoCode={}", userId, hotelId, promoCode);
 
         validateUser(userId);
         validateHotel(hotelId);

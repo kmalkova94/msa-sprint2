@@ -21,13 +21,230 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     bookingsByUser: async (_, { userId }, { req }) => {
-		// TODO: Реальный вызов к grpc booking-сервису или заглушка + ACL
+        console.log(`[ACL] Запрос bookingsByUser для userId: ${userId}`);
+
+		const userIdFromHeader = req.headers.userid;
+        if (!userIdFromHeader) {
+            console.log('[ACL ERROR] Заголовок userid отсутствует');
+            throw new Error('Access denied: userid header required');
+        }
+        if (userIdFromHeader !== userId) {
+            console.log(`[ACL ERROR] Попытка доступа к чужим данным: header=${userIdFromHeader}, запрос=${userId}`);
+            throw new Error('Access denied: you can only view your own bookings');
+        }
+        try {
+            console.log(`[API] Вызов монолита для пользователя ${userId}`);
+            const response = await fetch(`http://monolith:8080/api/bookings?userId=${userId}`);
+
+            if (!response.ok) {
+                throw new Error(`Monolith API error: ${response.status}`);
+            }
+
+            const bookings = await response.json();
+            console.log(`[API] Получено бронирований: ${bookings.length}`);
+
+            return bookings.map(booking => ({
+                id: booking.bookingId || `booking-${Math.random().toString(36).substr(2, 9)}`,
+                userId: booking.userId,
+                hotelId: booking.hotelId,
+                promoCode: booking.promoCode || null,
+                discountPercent: booking.discountPercent || 0,
+                checkIn: booking.checkIn || '2024-01-01',
+                checkOut: booking.checkOut || '2024-01-07',
+            }));
+
+        } catch (error) {
+            console.error('[API ERROR] Ошибка при вызове монолита:', error.message);
+
+            console.log('[FALLBACK] Используем заглушки для бронирований');
+            return getMockBookings(userId);
+        }
     },
+    booking: async (_, { id }, { req }) => {
+        console.log(`[ACL] Запрос booking для id: ${id}`);
+
+        // ACL: Проверяем авторизацию
+        const userIdFromHeader = req.headers.userid;
+        if (!userIdFromHeader) {
+            throw new Error('Access denied: userid header required');
+        }
+
+        try {
+            // Вариант 1: Вызов REST API монолита
+            const response = await fetch(`http://monolith:8080/api/bookings/${id}`);
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    return null;
+                }
+                throw new Error(`Monolith API error: ${response.status}`);
+            }
+
+            const booking = await response.json();
+
+            // ACL: Проверяем, что пользователь запрашивает свое бронирование
+            if (booking.userId !== userIdFromHeader) {
+                console.log(`[ACL ERROR] Попытка доступа к чужому бронированию: ${id}`);
+                throw new Error('Access denied: you can only view your own bookings');
+            }
+
+            return {
+                id: booking.bookingId || id,
+                userId: booking.userId,
+                hotelId: booking.hotelId,
+                promoCode: booking.promoCode || null,
+                discountPercent: booking.discountPercent || 0,
+                checkIn: booking.checkIn || '2024-01-01',
+                checkOut: booking.checkOut || '2024-01-07',
+            };
+
+        } catch (error) {
+            console.error('[API ERROR] Ошибка при вызове монолита:', error.message);
+
+            // Вариант 2: Заглушка
+            const mockBooking = getMockBookingById(id, userIdFromHeader);
+            if (!mockBooking) {
+                return null;
+            }
+
+            // ACL: Проверяем доступ к заглушке
+            if (mockBooking.userId !== userIdFromHeader) {
+                throw new Error('Access denied: you can only view your own bookings');
+            }
+
+            return mockBooking;
+        }
+    }
   },
   Booking: {
-	  // TODO: Реальный вызов к grpc booking-сервису или заглушка + ACL
-  },
+        __resolveReference: async (reference, { req }) => {
+        console.log(`[Federation] Resolve reference для booking: ${reference.id}`);
+
+        try {
+            // Для __resolveReference ACL не требуется, так как это внутренний вызов федерации
+            // Но все же проверим наличие заголовка для отладки
+            const userIdFromHeader = req?.headers?.userid;
+
+            if (userIdFromHeader) {
+                console.log(`[Federation Debug] Запрос от пользователя: ${userIdFromHeader}`);
+            }
+
+            // Получаем бронирование по ID
+            const response = await fetch(`http://monolith:8080/api/bookings/${reference.id}`);
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    return null;
+                }
+                throw new Error(`Monolith API error: ${response.status}`);
+            }
+
+            const booking = await response.json();
+
+            return {
+                id: booking.bookingId || reference.id,
+                userId: booking.userId,
+                hotelId: booking.hotelId,
+                promoCode: booking.promoCode || null,
+                discountPercent: booking.discountPercent || 0,
+                checkIn: booking.checkIn || '2024-01-01',
+                checkOut: booking.checkOut || '2024-01-07',
+            };
+
+        } catch (error) {
+            console.error('[Federation ERROR] Ошибка при разрешении ссылки:', error.message);
+
+            // Заглушка для тестирования федерации
+            const mockBooking = getMockBookingById(reference.id);
+            if (!mockBooking) {
+                return null;
+            }
+
+            return mockBooking;
+        }
+    }
+  }
 };
+
+function getMockBookings(userId) {
+  const mockBookings = [
+    {
+      id: `booking-${userId}-1`,
+      userId: userId,
+      hotelId: 'hotel-777',
+      promoCode: 'SUMMER2024',
+      discountPercent: 10,
+      checkIn: '2024-07-01',
+      checkOut: '2024-07-07',
+    },
+    {
+      id: `booking-${userId}-2`,
+      userId: userId,
+      hotelId: 'hotel-888',
+      promoCode: null,
+      discountPercent: 0,
+      checkIn: '2024-08-15',
+      checkOut: '2024-08-20',
+    },
+    {
+      id: `booking-${userId}-3`,
+      userId: userId,
+      hotelId: 'hotel-999',
+      promoCode: 'WINTER2024',
+      discountPercent: 15,
+      checkIn: '2024-12-24',
+      checkOut: '2024-12-30',
+    },
+  ];
+
+  return mockBookings.filter(booking => booking.userId === userId);
+}
+
+function getMockBookingById(id, expectedUserId = null) {
+  // Создаем список заглушек для разных пользователей
+  const allMockBookings = [
+    {
+      id: 'booking-user1-1',
+      userId: 'user1',
+      hotelId: 'hotel-777',
+      promoCode: 'SUMMER2024',
+      discountPercent: 10,
+      checkIn: '2024-07-01',
+      checkOut: '2024-07-07',
+      status: 'CONFIRMED',
+    },
+    {
+      id: 'booking-user1-2',
+      userId: 'user1',
+      hotelId: 'hotel-888',
+      promoCode: null,
+      discountPercent: 0,
+      checkIn: '2024-08-15',
+      checkOut: '2024-08-20',
+      status: 'PENDING',
+    },
+    {
+      id: 'booking-user2-1',
+      userId: 'user2',
+      hotelId: 'hotel-999',
+      promoCode: 'WINTER2024',
+      discountPercent: 15,
+      checkIn: '2024-12-24',
+      checkOut: '2024-12-30',
+      status: 'CONFIRMED',
+    },
+  ];
+
+  const booking = allMockBookings.find(b => b.id === id);
+
+  // Если указан expectedUserId, проверяем совпадение
+  if (booking && expectedUserId && booking.userId !== expectedUserId) {
+    console.log(`[ACL WARNING] Бронирование ${id} принадлежит пользователю ${booking.userId}, запросил ${expectedUserId}`);
+    return null;
+  }
+
+  return booking || null;
+}
 
 const server = new ApolloServer({
   schema: buildSubgraphSchema([{ typeDefs, resolvers }]),

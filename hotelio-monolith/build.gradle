@@ -21,7 +21,7 @@ dependencies {
     implementation("com.google.protobuf:protobuf-java:3.25.3")
 
     runtimeOnly("org.postgresql:postgresql")
-
+    implementation("net.devh:grpc-client-spring-boot-starter:2.15.0.RELEASE")
 
     implementation files('libs/p-o-y-1.0.0.jar')
 }
