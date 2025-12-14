@@ -121,15 +121,12 @@ const resolvers = {
         console.log(`[Federation] Resolve reference для booking: ${reference.id}`);
 
         try {
-            // Для __resolveReference ACL не требуется, так как это внутренний вызов федерации
-            // Но все же проверим наличие заголовка для отладки
             const userIdFromHeader = req?.headers?.userid;
 
             if (userIdFromHeader) {
                 console.log(`[Federation Debug] Запрос от пользователя: ${userIdFromHeader}`);
             }
 
-            // Получаем бронирование по ID
             const response = await fetch(`http://monolith:8080/api/bookings/${reference.id}`);
 
             if (!response.ok) {
@@ -154,7 +151,6 @@ const resolvers = {
         } catch (error) {
             console.error('[Federation ERROR] Ошибка при разрешении ссылки:', error.message);
 
-            // Заглушка для тестирования федерации
             const mockBooking = getMockBookingById(reference.id);
             if (!mockBooking) {
                 return null;
@@ -201,7 +197,6 @@ function getMockBookings(userId) {
 }
 
 function getMockBookingById(id, expectedUserId = null) {
-  // Создаем список заглушек для разных пользователей
   const allMockBookings = [
     {
       id: 'booking-user1-1',
@@ -237,7 +232,6 @@ function getMockBookingById(id, expectedUserId = null) {
 
   const booking = allMockBookings.find(b => b.id === id);
 
-  // Если указан expectedUserId, проверяем совпадение
   if (booking && expectedUserId && booking.userId !== expectedUserId) {
     console.log(`[ACL WARNING] Бронирование ${id} принадлежит пользователю ${booking.userId}, запросил ${expectedUserId}`);
     return null;
