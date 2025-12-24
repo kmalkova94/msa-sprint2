@@ -88,6 +88,13 @@ services:
     depends_on:
       - booking-subgraph
       - hotel-subgraph
+      - promocode-subgraph
+    networks:
+      - hotelio-net
+    environment:
+      - BOOKING_SUBGRAPH_URL=http://booking-subgraph:4001
+      - HOTEL_SUBGRAPH_URL=http://hotel-subgraph:4002
+      - PROMOCODE_SUBGRAPH_URL=http://promocode-subgraph:4003
 
   booking-subgraph:
     build: ./booking-subgraph
@@ -96,15 +103,31 @@ services:
     environment:
       - USE_MOCKS=true
       - MONOLITH_URL=http://monolith:8080
+    networks:
+      - hotelio-net
 
   hotel-subgraph:
     build: ./hotel-subgraph
     ports:
       - "4002:4002"
+    networks:
+      - hotelio-net
+    environment:
+      - MONOLITH_URL=http://monolith:8080
+
+  promocode-subgraph:
+    build: ./promocode-subgraph
+    ports:
+      - "4003:4003"
+    networks:
+      - hotelio-net
+    environment:
+      - MONOLITH_URL=http://monolith:8080
 
 volumes:
   monolith-db-data:
   booking-service-db-data:
+  booking-history-db-data:
 
 
 networks:

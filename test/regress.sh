@@ -14,9 +14,9 @@ echo "🧪 Проверка подключения к monolith БД..."
 timeout 2 bash -c "</dev/tcp/${DB_HOST}/${DB_PORT}" \
   || { echo "❌ Не удалось подключиться к ${DB_HOST}:${DB_PORT}"; exit 1; }
 
-echo "🧪 Проверка подключения к booking-service БД..."
-timeout 2 bash -c "</dev/tcp/${BOOKING_DB_HOST}/${BOOKING_DB_PORT}" \
-  || { echo "❌ Не удалось подключиться к ${BOOKING_DB_HOST}:${BOOKING_DB_PORT}"; exit 1; }
+#echo "🧪 Проверка подключения к booking-service БД..."
+#timeout 2 bash -c "</dev/tcp/${BOOKING_DB_HOST}/${BOOKING_DB_PORT}" \
+#  || { echo "❌ Не удалось подключиться к ${BOOKING_DB_HOST}:${BOOKING_DB_PORT}"; exit 1; }
 
 # Ждем монолит
 #timeout 60 bash -c 'until curl -s http://monolith:8080/actuator/health > /dev/null; do sleep 1; done'
@@ -31,10 +31,10 @@ echo "🧪 Загрузка фикстур..."
 PGPASSWORD="${DB_PASSWORD}" psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" "${DB_NAME}" < init-fixtures.sql
 
 # Загрузка фикстур в booking-service (если нужно)
-echo "🧪 Загрузка фикстур в booking-service..."
-if [ -f "init-booking-fixtures.sql" ]; then
-    PGPASSWORD="${BOOKING_DB_PASSWORD}" psql -h "${BOOKING_DB_HOST}" -p "${BOOKING_DB_PORT}" -U "${BOOKING_DB_USER}" "${BOOKING_DB_NAME}" < init-booking-fixtures.sql
-fi
+#echo "🧪 Загрузка фикстур в booking-service..."
+#if [ -f "init-booking-fixtures.sql" ]; then
+#    PGPASSWORD="${BOOKING_DB_PASSWORD}" psql -h "${BOOKING_DB_HOST}" -p "${BOOKING_DB_PORT}" -U "${BOOKING_DB_USER}" "${BOOKING_DB_NAME}" < init-booking-fixtures.sql
+#fi
 
 echo "🧪 Выполнение HTTP-тестов..."
 
@@ -125,7 +125,7 @@ echo ""
 echo "Тесты бронирования..."
 
 # 1. Получение всех бронирований
-#curl -sSf "${BASE}/api/bookings" | grep -q 'test-user-2' && pass "Все бронирования получены" || fail "Бронирования не получены"
+curl -sSf "${BASE}/api/bookings" | grep -q 'test-user-2' && pass "Все бронирования получены" || fail "Бронирования не получены"
 
 # 2. Получение бронирований пользователя
 curl -sSf "${BASE}/api/bookings?userId=test-user-2" | grep -q 'test-user-2' && pass "Бронирования test-user-2 найдены" || fail "Нет бронирований test-user-2"

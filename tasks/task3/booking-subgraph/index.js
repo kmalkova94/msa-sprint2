@@ -4,24 +4,79 @@ import { buildSubgraphSchema } from '@apollo/subgraph';
 import gql from 'graphql-tag';
 
 const typeDefs = gql`
+
+  extend schema
+      @link(url: "https://specs.apollo.dev/federation/v2.0",
+            import: ["@key", "@external", "@shareable", "@extends", "@requires"])
+
+  enum BookingStatus {
+    CONFIRMED
+    PENDING
+    CANCELLED
+    COMPLETED
+  }
+
   type Booking @key(fields: "id") {
     id: ID!
     userId: String!
     hotelId: String!
     promoCode: String
     discountPercent: Int
+    checkIn: String!
+    checkOut: String!
+    status: BookingStatus!
+    hotel: Hotel
   }
+
+  type Hotel @key(fields: "id") {
+      id: ID!
+   }
 
   type Query {
-    bookingsByUser(userId: String!): [Booking]
+    bookingsByUser(userId: String!): [Booking!]!
   }
-
 `;
+
+const mockBookings = [
+  {
+    id: 'booking-1',
+    userId: 'user-123',
+    hotelId: 'hotel-777',
+    promoCode: 'SUMMER2024',
+    discountPercent: 10,
+    checkIn: '2024-07-01',
+    checkOut: '2024-07-07',
+    status: 'CONFIRMED'
+  },
+  {
+    id: 'booking-2',
+    userId: 'user-123',
+    hotelId: 'hotel-888',
+    promoCode: null,
+    discountPercent: 0,
+    checkIn: '2024-08-15',
+    checkOut: '2024-08-20',
+    status: 'PENDING'
+  },
+  {
+    id: 'booking-3',
+    userId: 'user-456',  // Другой пользователь
+    hotelId: 'hotel-999',
+    promoCode: 'WINTER2024',
+    discountPercent: 15,
+    checkIn: '2024-12-24',
+    checkOut: '2024-12-30',
+    status: 'CONFIRMED'
+  }
+];
 
 const resolvers = {
   Query: {
     bookingsByUser: async (_, { userId }, { req }) => {
         console.log(`[ACL] Запрос bookingsByUser для userId: ${userId}`);
+
+        console.log(`[ACL] Запрос бронирований для пользователя: ${userId}`);
+        console.log(`[ACL] Заголовок userid из контекста: ${req.headers.userid}`);
 
 		const userIdFromHeader = req.headers.userid;
         if (!userIdFromHeader) {
@@ -51,6 +106,7 @@ const resolvers = {
                 discountPercent: booking.discountPercent || 0,
                 checkIn: booking.checkIn || '2024-01-01',
                 checkOut: booking.checkOut || '2024-01-07',
+                status: booking.status || 'PENDING'
             }));
 
         } catch (error) {
@@ -96,6 +152,7 @@ const resolvers = {
                 discountPercent: booking.discountPercent || 0,
                 checkIn: booking.checkIn || '2024-01-01',
                 checkOut: booking.checkOut || '2024-01-07',
+                status: booking.status || 'PENDING'
             };
 
         } catch (error) {
@@ -138,7 +195,8 @@ const resolvers = {
 
             const booking = await response.json();
 
-            return {
+            //return booking;
+            /*return {
                 id: booking.bookingId || reference.id,
                 userId: booking.userId,
                 hotelId: booking.hotelId,
@@ -146,7 +204,8 @@ const resolvers = {
                 discountPercent: booking.discountPercent || 0,
                 checkIn: booking.checkIn || '2024-01-01',
                 checkOut: booking.checkOut || '2024-01-07',
-            };
+                status: booking.status || 'PENDING'
+            };*/
 
         } catch (error) {
             console.error('[Federation ERROR] Ошибка при разрешении ссылки:', error.message);
@@ -155,10 +214,14 @@ const resolvers = {
             if (!mockBooking) {
                 return null;
             }
-
             return mockBooking;
         }
-    }
+    },
+    hotel: (booking) => {
+          console.log(`[Booking Subgraph] Resolving hotel for booking ${booking.id}`);
+          // Просто возвращаем ссылку на Hotel
+          return { __typename: "Hotel", id: booking.hotelId };
+        }
   }
 };
 
