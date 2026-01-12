@@ -17,8 +17,8 @@ echo
 echo "▶️ Port-forward to test service locally:"
 echo "  kubectl port-forward svc/booking-service 8080:80"
 echo "  Then in another terminal:"
-echo "    curl http://localhost:8080/ping"
+echo "    curl http://localhost:8080/api/ping"
 
 echo
 echo "▶️ Quick curl (if port-forward already running):"
-curl --fail http://localhost:8080/ping && echo "✅ Reachable" || echo "❌ Not responding"
+curl --fail http://localhost:8082/api/ping && echo "✅ Reachable" || echo "❌ Not responding"

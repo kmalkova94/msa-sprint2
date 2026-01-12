@@ -1,0 +1,215 @@
+Kseniya Malkova@DESKTOP-PS41UAJ MINGW64 ~/OneDrive/Documents/Микросервисная архитектура/msa-sprint2/tasks/task4 (main)
+$ gitlab-ci-local build test deploy-dependencies deploy tag
+parsing and downloads finished in 159 ms.
+json schema validated in 219 ms
+build               starting shell (build)
+build               $ echo "Starting pipeline for ${IMAGE_NAME}"
+build               > Starting pipeline for booking-service
+build               $ minikube status || minikube start --driver=docker
+build               > minikube
+build               > type: Control Plane
+build               > host: Running
+build               > kubelet: Running
+build               > apiserver: Running
+build               > kubeconfig: Configured
+build               >
+build               $ cd ../../../../microservices/booking-service
+build               $ docker build -t ${IMAGE_NAME} .
+build               > #0 building with "desktop-linux" instance using docker driver
+build               >
+build               > #1 [internal] load build definition from Dockerfile
+build               > #1 transferring dockerfile: 254B 0.0s done
+build               > #1 DONE 0.0s
+build               >
+build               > #2 [internal] load metadata for docker.io/library/eclipse-temurin:17-jdk
+build               > #2 DONE 1.5s
+build               >
+build               > #3 [internal] load .dockerignore
+build               > #3 transferring context: 2B done
+build               > #3 DONE 0.0s
+build               >
+build               > #4 [1/6] FROM docker.io/library/eclipse-temurin:17-jdk@sha256:7995efb7f9276fc16433aa8e2856a06082cd09f7f6603579db2534937ccc6778
+build               > #4 DONE 0.0s
+build               >
+build               > #5 [internal] load build context
+build               > #5 transferring context: 38.25kB 0.1s done
+build               > #5 DONE 0.1s
+build               >
+build               > #6 [3/6] COPY . /app
+build               > #6 CACHED
+build               >
+build               > #7 [4/6] RUN sed -i 's/\r$//' ./gradlew
+build               > #7 CACHED
+build               >
+build               > #8 [5/6] RUN chmod +x ./gradlew
+build               > #8 CACHED
+build               >
+build               > #9 [2/6] WORKDIR /app
+build               > #9 CACHED
+build               >
+build               > #10 [6/6] RUN ./gradlew build
+build               > #10 CACHED
+build               >
+build               > #11 exporting to image
+build               > #11 exporting layers done
+build               > #11 writing image sha256:84729c9ee936a2038b5ba47df7e52b0be151f5b225611012e370db16b103140a done
+build               > #11 naming to docker.io/library/booking-service done
+build               > #11 DONE 0.0s
+build               $ docker tag ${IMAGE_NAME} ${IMAGE_NAME}:${IMAGE_TAG}
+build               finished in 3.34 s
+build               !! no artifacts was copied !!
+test                starting shell (test)
+test                $ echo "Starting pipeline for ${IMAGE_NAME}"
+test                > Starting pipeline for booking-service
+test                $ minikube status || minikube start --driver=docker
+test                > minikube
+test                > type: Control Plane
+test                > host: Running
+test                > kubelet: Running
+test                > apiserver: Running
+test                > kubeconfig: Configured
+test                >
+test                $ docker network create hotelio-net || true
+test                > Error response from daemon: network with name hotelio-net already exists
+test                $ docker compose up -d booking-service booking-service-db zookeeper kafka
+test                > time="2026-01-07T21:19:56+03:00" level=warning msg="C:\\Users\\Kseniya Malkova\\OneDrive\\Documents\\Микросервисная архитектура\\msa-sprint2\\tasks\\task4\\docker-compose.yml: `version` is
+ obsolete"
+test                >  Container booking-service-db  Creating
+test                >  Container task4-kafka-1  Creating
+test                >  Container task4-zookeeper-1  Creating
+test                >  Container booking-service  Creating
+test                >  Container booking-service  Created
+test                >  Container booking-service-db  Created
+test                >  Container task4-zookeeper-1  Created
+test                >  Container task4-kafka-1  Created
+test                >  Container task4-zookeeper-1  Starting
+test                >  Container task4-kafka-1  Starting
+test                >  Container booking-service-db  Starting
+test                >  Container booking-service  Starting
+test                >  Container booking-service-db  Started
+test                >  Container booking-service  Started
+test                >  Container task4-kafka-1  Started
+test                >  Container task4-zookeeper-1  Started
+test                $ sleep 50
+test                > still running...
+test                > still running...
+test                > still running...
+test                > still running...
+test                > still running...
+test                $ curl -f http://localhost:8082/api/ping
+test                >   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+test                >                                  Dload  Upload   Total   Spent    Left  Speed
+100     4  100     4    0     0     35      0 --:--:-- --:--:-- --:--:--    35
+test                > pong<gclShellPromptPlaceholder> curl -f http://localhost:8082/api/ready
+test                >   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+test                >                                  Dload  Upload   Total   Spent    Left  Speed
+100   119    0   119    0     0   2564      0 --:--:-- --:--:-- --:--:--  2531
+test                > {"database":"UP","service":"booking-service","kafka":"UP","timestamp":"2026-01-07T18:20:48.173+00:00","status":"READY"}<gclShellPromptPlaceholder> docker compose down
+test                > time="2026-01-07T21:20:48+03:00" level=warning msg="C:\\Users\\Kseniya Malkova\\OneDrive\\Documents\\Микросервисная архитектура\\msa-sprint2\\tasks\\task4\\docker-compose.yml: `version` is
+ obsolete"
+test                >  Container task4-kafka-1  Stopping
+test                >  Container booking-service-db  Stopping
+test                >  Container task4-zookeeper-1  Stopping
+test                >  Container booking-service  Stopping
+test                >  Container booking-service-db  Stopped
+test                >  Container booking-service-db  Removing
+test                >  Container booking-service-db  Removed
+test                >  Container task4-zookeeper-1  Stopped
+test                >  Container task4-zookeeper-1  Removing
+test                >  Container task4-zookeeper-1  Removed
+test                >  Container booking-service  Stopped
+test                >  Container booking-service  Removing
+test                >  Container booking-service  Removed
+test                >  Container task4-kafka-1  Stopped
+test                >  Container task4-kafka-1  Removing
+test                >  Container task4-kafka-1  Removed
+test                finished in 55 s
+deploy-dependencies starting shell (deploy-dependencies)
+deploy-dependencies $ echo "Starting pipeline for ${IMAGE_NAME}"
+deploy-dependencies > Starting pipeline for booking-service
+deploy-dependencies $ minikube status || minikube start --driver=docker
+deploy-dependencies > minikube
+deploy-dependencies > type: Control Plane
+deploy-dependencies > host: Running
+deploy-dependencies > kubelet: Running
+deploy-dependencies > apiserver: Running
+deploy-dependencies > kubeconfig: Configured
+deploy-dependencies >
+deploy-dependencies $ echo "Deploying dependencies to Minikube..."
+deploy-dependencies > Deploying dependencies to Minikube...
+deploy-dependencies $ kubectl apply -f helm/postgres/pvc.yaml
+deploy-dependencies > persistentvolumeclaim/booking-service-db-pvc unchanged
+deploy-dependencies $ kubectl apply -f helm/postgres/service.yaml
+deploy-dependencies > service/booking-service-db created
+deploy-dependencies $ kubectl apply -f helm/postgres/deployment.yaml
+deploy-dependencies > deployment.apps/booking-service-db created
+deploy-dependencies $ kubectl apply -f helm/kafka/zookeeper-service.yaml
+deploy-dependencies > service/zookeeper created
+deploy-dependencies $ kubectl apply -f helm/kafka/zookeeper-deployment.yaml
+deploy-dependencies > deployment.apps/zookeeper created
+deploy-dependencies $ sleep 50
+deploy-dependencies > still running...
+deploy-dependencies > still running...
+deploy-dependencies > still running...
+deploy-dependencies > still running...
+deploy-dependencies $ kubectl apply -f helm/kafka/kafka-service.yaml
+deploy-dependencies > service/kafka-booking created
+deploy-dependencies $ kubectl apply -f helm/kafka/kafka-deployment.yaml
+deploy-dependencies > deployment.apps/kafka created
+deploy-dependencies $ kubectl wait --for=condition=available --timeout=120s deployment/booking-service-db
+deploy-dependencies > deployment.apps/booking-service-db condition met
+deploy-dependencies $ kubectl wait --for=condition=available --timeout=120s deployment/zookeeper
+deploy-dependencies > deployment.apps/zookeeper condition met
+deploy-dependencies $ kubectl wait --for=condition=available --timeout=300s deployment/kafka
+deploy-dependencies > deployment.apps/kafka condition met
+deploy-dependencies finished in 53 s
+deploy              starting shell (deploy)
+deploy              $ echo "Starting pipeline for ${IMAGE_NAME}"
+deploy              > Starting pipeline for booking-service
+deploy              $ minikube status || minikube start --driver=docker
+deploy              > minikube
+deploy              > type: Control Plane
+deploy              > host: Running
+deploy              > kubelet: Running
+deploy              > apiserver: Running
+deploy              > kubeconfig: Configured
+deploy              >
+deploy              $ minikube image load ${IMAGE_NAME}:latest
+deploy              > still running...
+deploy              > still running...
+deploy              > still running...
+deploy              > still running...
+deploy              > still running...
+deploy              > still running...
+deploy              $ helm upgrade --install booking-service ${HELM_CHART_DIR} -f ${HELM_CHART_DIR}/values-staging.yaml
+deploy              > Release "booking-service" has been upgraded. Happy Helming!
+deploy              > NAME: booking-service
+deploy              > LAST DEPLOYED: Wed Jan  7 21:22:45 2026
+deploy              > NAMESPACE: default
+deploy              > STATUS: deployed
+deploy              > REVISION: 19
+deploy              > DESCRIPTION: Upgrade complete
+deploy              > TEST SUITE: None
+deploy              finished in 1.03 min
+tag                 starting shell (tag)
+tag                 $ echo "Starting pipeline for ${IMAGE_NAME}"
+tag                 > Starting pipeline for booking-service
+tag                 $ minikube status || minikube start --driver=docker
+tag                 > minikube
+tag                 > type: Control Plane
+tag                 > host: Running
+tag                 > kubelet: Running
+tag                 > apiserver: Running
+tag                 > kubeconfig: Configured
+tag                 >
+tag                 $ git tag "deploy-$(date +%Y%m%d-%H%M%S)"
+tag                 $ echo "Tag created successfully"
+tag                 > Tag created successfully
+tag                 finished in 1.11 s
+
+ PASS  build
+ PASS  test
+ PASS  deploy-dependencies
+ PASS  deploy
+ PASS  tag
+deploy environment: { name: staging, url: http://booking-service.local }

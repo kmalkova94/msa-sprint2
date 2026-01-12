@@ -3,14 +3,10 @@ package com.hotelio.monolith.service;
 import com.hotelio.monolith.entity.Booking;
 import com.hotelio.monolith.entity.PromoCode;
 import com.hotelio.monolith.repository.BookingRepository;
-import com.hotelio.proto.booking.BookingRequest;
-import com.hotelio.proto.booking.BookingResponse;
-import com.hotelio.proto.booking.BookingServiceGrpc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 

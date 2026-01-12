@@ -1,6 +1,5 @@
 package com.hotelio.monolith.controller;
 
-import com.hotelio.GrpcBookingService;
 import com.hotelio.monolith.entity.Booking;
 import com.hotelio.monolith.service.BookingService;
 import org.springframework.http.ResponseEntity;
@@ -16,14 +15,13 @@ public class BookingController {
 
     public BookingController(BookingService bookingService) {
         this.bookingService = bookingService;
-        //this.grpcBookingService = grpcBookingService;
     }
 
     // GET /api/bookings?userId=123
     @GetMapping
     public List<Booking> listBookings(@RequestParam(required = false) String userId) {
         if(userId == null) {
-            userId = "1";
+            userId = "";
         }
         return bookingService.listAll(userId);
     }
@@ -34,7 +32,6 @@ public class BookingController {
                                                  @RequestParam String hotelId,
                                                  @RequestParam(required = false) String promoCode) {
         Booking booking = bookingService.createBooking(userId, hotelId, promoCode);
-        //Booking booking = grpcBookingService.createBooking(userId, hotelId, promoCode);
         return ResponseEntity.ok(booking);
     }
 }

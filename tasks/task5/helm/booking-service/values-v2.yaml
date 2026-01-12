@@ -1,0 +1,46 @@
+replicaCount: 1
+
+image:
+  name: booking-service
+  tag: latest
+  pullPolicy: Never
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8082
+  healthCheckPort: 8082
+  create: false
+
+env:
+  - name: VERSION
+    value: "v2"
+  - name: SPRING_PROFILES_ACTIVE
+    value: "staging"
+  - name: LOG_LEVEL
+    value: "DEBUG"
+  - name: ENABLE_FEATURE_X
+    value: "true"
+  - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+    value: "health,info,metrics,prometheus"
+  - name: SPRING_DATASOURCE_URL
+    value: jdbc:postgresql://booking-service-db:5432/booking
+  - name: SPRING_DATASOURCE_USERNAME
+    value: booking
+  - name: SPRING_DATASOURCE_PASSWORD
+    value: booking
+  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+    value: kafka-booking:9092
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+labels:
+  name: booking-service
+  version: v2
+

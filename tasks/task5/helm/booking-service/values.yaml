@@ -1,0 +1,25 @@
+replicaCount: 1
+
+image:
+  name: booking-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8082
+  healthCheckPort: 8082
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+livenessProbe:
+
+readinessProbe:
+
